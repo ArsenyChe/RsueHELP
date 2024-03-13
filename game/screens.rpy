@@ -9,6 +9,34 @@ init offset = -1
 ## Стили
 ################################################################################
 
+
+#Галерея ачивок
+
+screen AchiveScreen():
+    tag menu
+
+    python:
+        lockedSlots = maxcountAchives - len(persistent.AddAchive)
+    use game_menu("Достижения", scroll="viewport"):
+        grid 1 8:
+            xspacing 50
+            yspacing 50
+            for id, item in allAchievements.items():
+                if id in persistent.AddAchive:
+                    frame:
+                        xysize(1200, 210)
+                        text id xalign .6 yalign .5 size 50
+                        frame:
+                            xysize(200, 200)
+                            background Frame("#66cc00")
+                            add item xalign 0.5 yalign .5
+            for index in range(lockedSlots):
+                frame:
+                    xysize(1200, 200)
+                    add "achiviments/image.jpg" xalign 0.5
+
+
+
 style default:
     properties gui.text_properties()
     language gui.language
@@ -228,7 +256,7 @@ style choice_button is default:
     properties gui.button_properties("choice_button")
 
 style choice_button_text is default:
-    properties gui.text_properties("choice_button")
+    properties gui.button_text_properties("choice_button")
 
 
 ## Экран быстрого меню #########################################################
@@ -273,7 +301,7 @@ style quick_button:
     properties gui.button_properties("quick_button")
 
 style quick_button_text:
-    properties gui.text_properties("quick_button")
+    properties gui.button_text_properties("quick_button")
 
 
 ################################################################################
@@ -298,6 +326,8 @@ screen navigation():
         if main_menu:
 
             textbutton _("Начать") action Start()
+            textbutton _("Достижения") action ShowMenu("AchiveScreen")
+            textbutton _("Галерея") action ShowMenu("gallery")
 
         else:
 
@@ -309,6 +339,13 @@ screen navigation():
 
         textbutton _("Настройки") action ShowMenu("preferences")
 
+
+
+
+
+
+
+
         if _in_replay:
 
             textbutton _("Завершить повтор") action EndReplay(confirm=True)
@@ -319,10 +356,12 @@ screen navigation():
 
         textbutton _("Об игре") action ShowMenu("about")
 
+
         if renpy.variant("pc") or (renpy.variant("web") and not renpy.variant("mobile")):
 
             ## Помощь не необходима и не относится к мобильным устройствам.
             textbutton _("Помощь") action ShowMenu("help")
+
 
         if renpy.variant("pc"):
 
@@ -339,7 +378,7 @@ style navigation_button:
     properties gui.button_properties("navigation_button")
 
 style navigation_button_text:
-    properties gui.text_properties("navigation_button")
+    properties gui.button_text_properties("navigation_button")
 
 
 ## Экран главного меню #########################################################
@@ -414,7 +453,7 @@ style main_menu_version:
 ## экран предназначен для использования с одним или несколькими дочерними
 ## элементами, которые трансклюдируются (помещаются) внутрь него.
 
-screen game_menu(title, scroll=None, yinitial=0.0, spacing=0):
+screen game_menu(title, scroll=None, yinitial=0.0):
 
     style_prefix "game_menu"
 
@@ -447,8 +486,6 @@ screen game_menu(title, scroll=None, yinitial=0.0, spacing=0):
                         side_yfill True
 
                         vbox:
-                            spacing spacing
-
                             transclude
 
                 elif scroll == "vpgrid":
@@ -463,8 +500,6 @@ screen game_menu(title, scroll=None, yinitial=0.0, spacing=0):
                         pagekeys True
 
                         side_yfill True
-
-                        spacing spacing
 
                         transclude
 
@@ -580,7 +615,7 @@ style about_label_text:
 ## как они почти одинаковые, оба реализованы по правилам третьего экрана —
 ## file_slots.
 ##
-## https://www.renpy.org/doc/html/screen_special.html#save 
+## https://www.renpy.org/doc/html/screen_special.html#save
 
 screen save():
 
@@ -709,13 +744,13 @@ style page_button:
     properties gui.button_properties("page_button")
 
 style page_button_text:
-    properties gui.text_properties("page_button")
+    properties gui.button_text_properties("page_button")
 
 style slot_button:
     properties gui.button_properties("slot_button")
 
 style slot_button_text:
-    properties gui.text_properties("slot_button")
+    properties gui.button_text_properties("slot_button")
 
 
 ## Экран настроек ##############################################################
@@ -849,7 +884,7 @@ style radio_button:
     foreground "gui/button/radio_[prefix_]foreground.png"
 
 style radio_button_text:
-    properties gui.text_properties("radio_button")
+    properties gui.button_text_properties("radio_button")
 
 style check_vbox:
     spacing gui.pref_button_spacing
@@ -859,7 +894,7 @@ style check_button:
     foreground "gui/button/check_[prefix_]foreground.png"
 
 style check_button_text:
-    properties gui.text_properties("check_button")
+    properties gui.button_text_properties("check_button")
 
 style slider_slider:
     xsize 525
@@ -870,7 +905,7 @@ style slider_button:
     left_margin 15
 
 style slider_button_text:
-    properties gui.text_properties("slider_button")
+    properties gui.button_text_properties("slider_button")
 
 style slider_vbox:
     xsize 675
@@ -891,7 +926,7 @@ screen history():
     ## массивным.
     predict False
 
-    use game_menu(_("История"), scroll=("vpgrid" if gui.history_height else "viewport"), yinitial=1.0, spacing=gui.history_spacing):
+    use game_menu(_("История"), scroll=("vpgrid" if gui.history_height else "viewport"), yinitial=1.0):
 
         style_prefix "history"
 
@@ -1068,7 +1103,7 @@ screen mouse_help():
         text _("Вход в игровое меню.")
 
     hbox:
-        label _("Колёсико вверх")
+        label _("Колёсико вверх\nКлик на сторону отката")
         text _("Откат назад по сюжету игры.")
 
     hbox:
@@ -1090,12 +1125,13 @@ screen gamepad_help():
         label _("Правый бампер")
         text _("Откатывает предыдущее действие вперёд.")
 
+
     hbox:
         label _("Крестовина, Стики")
         text _("Навигация по интерфейсу.")
 
     hbox:
-        label _("Старт, Гид, B/кнопка вправо")
+        label _("Начало, Руководство")
         text _("Вход в игровое меню.")
 
     hbox:
@@ -1116,7 +1152,7 @@ style help_button:
     xmargin 12
 
 style help_button_text:
-    properties gui.text_properties("help_button")
+    properties gui.button_text_properties("help_button")
 
 style help_label:
     xsize 375
@@ -1140,6 +1176,51 @@ style help_label_text:
 ## Да или Нет.
 ##
 ## https://www.renpy.org/doc/html/screen_special.html#confirm
+
+
+
+screen notifyAchive(message="",title="",currentImage=""):
+    zorder 100
+    style_prefix "notify"
+
+    frame at notifyAchive_appear:
+        #background Frame("#4682B4")
+        #if currentImage != None:
+        #    text "{size=+10}[title]{/size}\n{image=[currentImage]}\n{size=+5}[message!tq]{/size}"
+        window:
+            background "#66cc00"
+            xalign .98
+            yalign .02
+            xysize (750, 250)
+            hbox:
+                frame:
+                    xalign 0.5 yalign .5
+                    image currentImage
+                frame:
+
+                    xalign .6 yalign .5
+                    text title:
+
+                        size 30
+                        id title xalign .6 yalign .3
+
+                    text message:
+                        size 20
+
+                        id message xalign .6 yalign .6
+    timer 3.25 action Hide('notifyAchive')
+
+
+transform notifyAchive_appear:
+        on show:
+                xalign 2.0
+                alpha 1
+
+                linear .25 xalign 0.9
+        on hide:
+                linear .5 yalign 2.0
+
+
 
 screen confirm(message, yes_action, no_action):
 
@@ -1194,7 +1275,7 @@ style confirm_button:
     properties gui.button_properties("confirm_button")
 
 style confirm_button_text:
-    properties gui.text_properties("confirm_button")
+    properties gui.button_text_properties("confirm_button")
 
 
 ## Экран индикатора пропуска ###################################################
@@ -1405,7 +1486,7 @@ style nvl_button:
     xanchor gui.nvl_button_xalign
 
 style nvl_button_text:
-    properties gui.text_properties("nvl_button")
+    properties gui.button_text_properties("nvl_button")
 
 
 ## Пузырьковый экран ###########################################################
